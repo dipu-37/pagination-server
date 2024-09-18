@@ -9,8 +9,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
-
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gjzedcz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -37,14 +35,21 @@ async function run() {
 
     const productCollection = client.db('emaJohnDB').collection('products');
 
-    app.get('/products', async(req, res) => {
-        const result = await productCollection.find().toArray();
-        res.send(result);
+    app.get('/products', async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      console.log('pagination querya:', req.query)
+      const result = await productCollection.find()
+      .skip(page * size)
+      .limit(size)
+      .toArray();
+      res.send(result);
     })
 
-    app.get('/productsCount',async(req,res)=>{
-      const count= await productCollection.estimatedDocumentCount();
-      res.send({count});
+    // This is a MongoDB method that returns an estimate of the total number of documents in the collection
+    app.get('/productsCount', async (req, res) => {
+      const count = await productCollection.estimatedDocumentCount();
+      res.send({ count });
     })
 
     // Send a ping to confirm a successful connection
@@ -58,10 +63,10 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/', (req, res) =>{
-    res.send('john is busy shopping')
+app.get('/', (req, res) => {
+  res.send('john is busy shopping')
 })
 
-app.listen(port, () =>{
-    console.log(`ema john server is running on port: ${port}`);
+app.listen(port, () => {
+  console.log(`ema john server is running on port: ${port}`);
 })
